@@ -4,34 +4,36 @@ import shutil
 import requests
 import os
 from secure import createRedditSecure
+from google.cloud import vision
+import pyexiv2
 
-
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="cache/pyvision-331611-767b74d9e10c.json"
 reddit = createRedditSecure()
 print(reddit.read_only)
 subredlist = {
 
-# "ImaginaryArchers": {"base":"characters"},
-# "ImaginaryAssassins": {"base":"characters"},
-# "ImaginaryAstronauts": {"base":"characters"},
-# "ImaginaryKnights": {"base":"characters"},
-# "ImaginaryLovers": {"base":"characters"},
-# "ImaginaryMythology": {"base":"characters"},
-# "ImaginaryNobles": {"base":"characters"},
-# "ImaginaryScholars": {"base":"characters"},
-# "ImaginarySoldiers": {"base":"characters"},
-# "ImaginaryWarriors": {"base":"characters"},
-# "ImaginaryWitches": {"base":"characters"},
-# "ImaginaryWizards": {"base":"characters"},
+"ImaginaryArchers": {"base":"characters"},
+"ImaginaryAssassins": {"base":"characters"},
+"ImaginaryAstronauts": {"base":"characters"},
+"ImaginaryKnights": {"base":"characters"},
+"ImaginaryLovers": {"base":"characters"},
+"ImaginaryMythology": {"base":"characters"},
+"ImaginaryNobles": {"base":"characters"},
+"ImaginaryScholars": {"base":"characters"},
+"ImaginarySoldiers": {"base":"characters"},
+"ImaginaryWarriors": {"base":"characters"},
+"ImaginaryWitches": {"base":"characters"},
+"ImaginaryWizards": {"base":"characters"},
 
 
-# "ImaginaryAngels":{"base":"characters"},
-# "ImaginaryDwarves":{"base":"characters"},
-# "ImaginaryElves":{"base":"characters"},
-# "ImaginaryFaeries":{"base":"characters"},
-# "ImaginaryHumans":{"base":"characters"},
-# "ImaginaryImmortals":{"base":"characters"},
-# "ImaginaryMerfolk":{"base":"characters"},
-# "ImaginaryOrcs":{"base":"characters"},
+"ImaginaryAngels":{"base":"characters"},
+"ImaginaryDwarves":{"base":"characters"},
+"ImaginaryElves":{"base":"characters"},
+"ImaginaryFaeries":{"base":"characters"},
+"ImaginaryHumans":{"base":"characters"},
+"ImaginaryImmortals":{"base":"characters"},
+"ImaginaryMerfolk":{"base":"characters"},
+"ImaginaryOrcs":{"base":"characters"},
 
 "ImaginaryArchitecture":{"base":"architecture"},
 "ImaginaryCastles":{"base":"architecture"},
@@ -67,18 +69,18 @@ subredlist = {
 "ImaginaryWeaponry":{"base":"technology"},
 
 
-# "ImaginaryBattlefields": {"base":"landscapes"},
-# "ImaginaryCityscapes": {"base":"landscapes"},
-# "ImaginaryHellscapes": {"base":"landscapes"},
-# "ImaginaryMindscapes": {"base":"landscapes"},
-# "ImaginaryPathways": {"base":"landscapes"},
-# "ImaginarySeascapes": {"base":"landscapes"},
-# "ImaginarySkyscapes": {"base":"landscapes"},
-# "ImaginaryStarscapes": {"base":"landscapes"},
-# "ImaginaryWastelands": {"base":"landscapes"},
-# "ImaginaryWeather": {"base":"landscapes"},
-# "ImaginaryWildlands": {"base":"landscapes"},
-# "ImaginaryWorlds": {"base":"landscapes"},
+"ImaginaryBattlefields": {"base":"landscapes"},
+"ImaginaryCityscapes": {"base":"landscapes"},
+"ImaginaryHellscapes": {"base":"landscapes"},
+"ImaginaryMindscapes": {"base":"landscapes"},
+"ImaginaryPathways": {"base":"landscapes"},
+"ImaginarySeascapes": {"base":"landscapes"},
+"ImaginarySkyscapes": {"base":"landscapes"},
+"ImaginaryStarscapes": {"base":"landscapes"},
+"ImaginaryWastelands": {"base":"landscapes"},
+"ImaginaryWeather": {"base":"landscapes"},
+"ImaginaryWildlands": {"base":"landscapes"},
+"ImaginaryWorlds": {"base":"landscapes"},
 }
 for subred, subdata in subredlist.items():
 	
@@ -103,13 +105,53 @@ for subred, subdata in subredlist.items():
 					filetype = filetype.split("?")[0]
 					if filetype in ["jpg","png","gif"]:
 						filename = "".join([data["author"].name,"_",data["name"],".",filetype])
-						if not os.path.isfile("cache\\"+filename):
+						# print(data)
+						# if not os.path.isfile("cache\\"+subdata["base"]+"\\"+filename):
+						if os.path.isfile("cache\\"+subdata["base"]+"\\"+filename):
 							
-							response = requests.get(url, stream=True)
+							img_response = requests.get(url, stream=True)
 							print(subred, filename)
+							keywords = [subred]
+
+							# client = vision.ImageAnnotatorClient()
+							# image = vision.Image()
+							# image.source.image_uri = url
+							# response = client.label_detection(image=image, max_results=40)
+							# ignore = ["art", "font", "illustration", "handwriting", "painting",
+							# 'drawing', 'fictional character', 'visual arts', 'supernatural creature', 'graphics', 'graphic design', 'fiction',
+							#  'hero',
+							# ]
+							# for label in response.label_annotations:
+							# 	# print(label.description, '(%.2f%%)' % (label.score*100.))
+							# 	desc = label.description.lower()
+							# 	if desc not in ignore:
+							# 		keywords.append(desc)
+							print(keywords)
+
 							with open("cache\\"+subdata["base"]+"\\"+filename, 'wb') as out_file:
-								shutil.copyfileobj(response.raw, out_file)
-							del response
-			except:	pass
+								shutil.copyfileobj(img_response.raw, out_file)
+							del img_response
+							# keywords = ["Building","Water","Skyscraper","Atmospheric phenomenon","Rectangle","Cloud","Glass","Sky","Tints and shades","City","Tower block","Facade","Transparent material","Urban area","Metropolis","Urban design","Reflection","Darkness","Condominium","Tower",]
+							img = pyexiv2.Image("cache\\"+subdata["base"]+"\\"+filename)
+							# print(dir(img))
+							# print(img.read_xmp())
+							img.modify_xmp({'Xmp.dc.subject': keywords, 'Xmp.dc.title': url, 'Xmp.iptc.CreatorContactInfo/Iptc4xmpCore:CiUrlWork': "https://www.reddit.com"+submission.permalink})
+			except Exception as e:
+				print(e)
 				# break
 			# print(title)
+			# break
+		# break
+	# break
+
+
+
+
+
+# print(help(client.label_detection))
+
+
+# print('Labels (and confidence score):')
+# print('=' * 30)
+# for label in response.label_annotations:
+#     print(label.description, '(%.2f%%)' % (label.score*100.))
