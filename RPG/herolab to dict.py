@@ -83,10 +83,10 @@ with open("fotrm.xml", 'r') as file:
 
 
 
-	print("#"*80)
+	# print("#"*80)
 	
-	print(char["defenses"])
-	print("#"*80)
+	# print(char["defenses"])
+	# print("#"*80)
 
 	for k,v in char.items():
 		print(k)
